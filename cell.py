@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 from graphics import Window, Point, Line
 
@@ -15,7 +16,7 @@ class Cell:
         right_wall: bool = True,
         top_wall: bool = True,
         bottom_wall: bool = True,
-    ):
+    ) -> Cell:
         self.has_left_wall = left_wall
         self.has_right_wall = right_wall
         self.has_top_wall = top_wall
@@ -39,7 +40,7 @@ class Cell:
         )
     
     
-    def draw(self, x1, y1, x2, y2):
+    def draw(self, x1: int, y1: int, x2: int, y2: int) -> None:
         """
         Draws the cell on the given window.
         """
@@ -62,7 +63,7 @@ class Cell:
             self._win.draw_line(left)
 
 
-    def draw_move(self, to_cell, undo=False):
+    def draw_move(self, to_cell: Cell, undo=False) -> None:
         if undo:
             fill_color = "gray"
         else:
