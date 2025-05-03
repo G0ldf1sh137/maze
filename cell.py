@@ -16,6 +16,7 @@ class Cell:
         right_wall: bool = True,
         top_wall: bool = True,
         bottom_wall: bool = True,
+        visited: bool = False,
     ) -> Cell:
         self.has_left_wall = left_wall
         self.has_right_wall = right_wall
@@ -26,6 +27,7 @@ class Cell:
         self._y1 = None
         self._x2 = None
         self._y2 = None
+        self.visited = visited
         self._win = win
         
         

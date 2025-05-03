@@ -40,7 +40,13 @@ class Tests(unittest.TestCase):
             "Exit wall not broken"
         )
 
-
+    def test_maze_init_visited_reset(self):
+        for i in range(self.num_cols):
+            for j in range(self.num_rows):
+                self.assertFalse(
+                    self.m1._cells[i][j].visited,
+                    f"Cell ({i}, {j}) should not be visited"
+                )
 
 
 if __name__ == "__main__":
