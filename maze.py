@@ -1,12 +1,19 @@
 from __future__ import annotations
 
+from typing import List
+
 import time
 import random
 
 from cell import Cell
 
+SOLVE_SPEED = 0.01
+BACKTRACK_SPEED = 0.02
 
 class Maze:
+    """
+    A class representing a maze using a grid of cells.
+    """
     def __init__(
         self,
         x1,
@@ -26,28 +33,23 @@ class Maze:
         self._cell_size_y = cell_size_y  # height of each cell
         self._win = win  # window to draw the maze on
 
+        # If no seed provided, get a random seed so we get a different maze each time
         if seed is not None:
             random.seed(seed)
 
-        self._create_cells()  # Create the cells in the maze
-        self._break_entrance_and_exit()  # Break the entrance and exit walls
-        self._break_walls_r(0, 0)  # Start breaking walls from the top-left cell
-        self._reset_cells_visited()  # Reset the visited status of all cells
+        self._create_cells()
+        self._break_entrance_and_exit()
+        self._break_walls_r(0, 0)
+        self._reset_cells_visited()
 
-    # Create cells in the maze
+
     def _create_cells(self) -> None:
-        # 2D List of all cells in the maze
-        self._cells = []
-
-        # loop through columns
+        self._cells: List[List[Cell]] = []
         for col in range(self._num_cols):
             # List of cells in the current column
-            col_cells = []
-            # loop through rows
+            col_cells: List[Cell] = []
             for row in range(self._num_rows):
-                # add a new cell to the list of cells in col_cells
                 col_cells.append(Cell(self._win))
-            # add the new column to _cells
             self._cells.append(col_cells)
 
         # Draw the cells in the maze
@@ -56,7 +58,6 @@ class Maze:
                 self._draw_cell(col, row)
 
     def _draw_cell(self, i: int, j: int) -> None:
-
         # For testing, return from this function if the window is None
         if self._win is None:
             return
@@ -71,7 +72,7 @@ class Maze:
         self._cells[i][j].draw(x1, y1, x2, y2)
         self._animate()
 
-    def _animate(self, t=0.001) -> None:
+    def _animate(self, t: float = 0.001) -> None:
         # For testing, return from this function if the window is None
         if self._win is None:
             return
@@ -81,45 +82,36 @@ class Maze:
         time.sleep(t)
 
     def _break_entrance_and_exit(self) -> None:
-        # Break the entrance and exit walls
         self._cells[0][0].has_top_wall = False
         self._cells[self._num_cols - 1][self._num_rows - 1].has_bottom_wall = False
-
-        # Redraw the entrance and exit
+        # Redraw the entrance and exit cells
         self._draw_cell(0, 0)
         self._draw_cell(self._num_cols - 1, self._num_rows - 1)
 
     def _break_walls_r(self, i, j) -> None:
-        # Break the walls of the cell at (i, j)
-        # print(f"Visiting cell ({i}, {j})")
         self._cells[i][j].visited = True
 
+        # Get the neighbors of the cell
+        # Neighbors must be inside the loop to be updated after each wall break
+        # or else when we return to the function we might re-visit the same cell
         while True:
-            # Get the neighbors of the cell
-            # Neighbors must be inside the loop to be updated after each wall break
-            # or else when we return to the function we might re-visit the same cell
             neighbors = []
 
             # Check Top
             if j > 0 and not self._cells[i][j - 1].visited:
                 neighbors.append((i, j - 1))
-                # print(f"Adding neighbor ({i}, {j - 1})")
             # Check Right
             if i < self._num_cols - 1 and not self._cells[i + 1][j].visited:
                 neighbors.append((i + 1, j))
-                # print(f"Adding neighbor ({i + 1}, {j})")
             # Check Bottom
             if j < self._num_rows - 1 and not self._cells[i][j + 1].visited:
                 neighbors.append((i, j + 1))
-                # print(f"Adding neighbor ({i}, {j + 1})")
             # Check Left
             if i > 0 and not self._cells[i - 1][j].visited:
                 neighbors.append((i - 1, j))
-                # print(f"Adding neighbor ({i - 1}, {j})")
 
             # If there are no neighbors, draw current cell and return to break the loop
             if len(neighbors) == 0:
-                # print(f"No neighbors for cell ({i}, {j})")
                 self._draw_cell(i, j)
                 return
 
@@ -128,7 +120,6 @@ class Maze:
 
             # Knock down walls between the current cell and the chosen neighbor
             ni, nj = neighbors[rand]
-            # print(f"Breaking walls between ({i}, {j}) and ({ni}, {nj})")
 
             # Neighbor is the cell to the top
             if ni == i and nj == j - 1:
@@ -156,51 +147,59 @@ class Maze:
             for j in range(self._num_rows):
                 self._cells[i][j].visited = False
 
-
     def solve(self) -> bool:
         return self._solve_r(0, 0)
-    
-    
+
     def _solve_r(self, i: int, j: int) -> bool:
         # Return true if we reached the exit
         if i == self._num_cols - 1 and j == self._num_rows - 1:
             return True
-        
-        self._animate(0.01) # run animate faster when solving
+
+        self._animate(SOLVE_SPEED) # run animate faster when solving
         current = self._cells[i][j]
         current.visited = True
-        
+
         # Check top
         if j > 0 and not current.has_top_wall and not self._cells[i][j - 1].visited:
             top = self._cells[i][j - 1]
             current.draw_move(top)
             if self._solve_r(i, j - 1):
                 return True
+            self._animate(BACKTRACK_SPEED) # run animate slower when backtracking
             current.draw_move(top, undo=True)
-        
+
         # Check right
-        if i < self._num_cols - 1 and not current.has_right_wall and not self._cells[i + 1][j].visited:
+        if (
+            i < self._num_cols - 1
+            and not current.has_right_wall
+            and not self._cells[i + 1][j].visited
+        ):
             right = self._cells[i + 1][j]
             current.draw_move(right)
             if self._solve_r(i + 1, j):
                 return True
+            self._animate(BACKTRACK_SPEED)
             current.draw_move(right, undo=True)
-        
         # Check bottom
-        if j < self._num_rows - 1 and not current.has_bottom_wall and not self._cells[i][j + 1].visited:
+        if (
+            j < self._num_rows - 1
+            and not current.has_bottom_wall
+            and not self._cells[i][j + 1].visited
+        ):
             bottom = self._cells[i][j + 1]
             current.draw_move(bottom)
             if self._solve_r(i, j + 1):
                 return True
+            self._animate(BACKTRACK_SPEED)
             current.draw_move(bottom, undo=True)
-            
+
         # Check left
         if i > 0 and not current.has_left_wall and not self._cells[i - 1][j].visited:
             left = self._cells[i - 1][j]
             current.draw_move(left)
             if self._solve_r(i - 1, j):
                 return True
+            self._animate(BACKTRACK_SPEED)
             current.draw_move(left, undo=True)
-        
 
         return False
