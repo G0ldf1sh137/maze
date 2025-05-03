@@ -23,12 +23,13 @@ class Maze:
         self._cell_size_y = cell_size_y # height of each cell
         self._win = win # window to draw the maze on
 
-        self._create_cells()
+        self._create_cells() # Create the cells in the maze
+        self._break_entrance_and_exit() # Break the entrance and exit walls
 
 
     # Create cells in the maze
     def _create_cells(self) -> None:
-        # List of all cells in the maze
+        # 2D List of all cells in the maze
         self._cells = []
         
         # loop through columns
@@ -47,6 +48,9 @@ class Maze:
         for col in range(self._num_cols):
             for row in range(self._num_rows):
                 self._draw_cell(col, row)
+                
+                
+        
 
     
     
@@ -65,6 +69,8 @@ class Maze:
         # draw the cell at position
         self._cells[i][j].draw(x1, y1, x2, y2)
         self._animate()
+        
+        
     
     
     def _animate(self) -> None:
@@ -74,4 +80,14 @@ class Maze:
         
         # Redraw the window to show the changes and sleep until next frame
         self._win.redraw()
-        time.sleep(0.05)
+        time.sleep(0.01)
+        
+        
+    def _break_entrance_and_exit(self) -> None:
+        # Break the entrance and exit walls
+        self._cells[0][0].has_top_wall = False
+        self._cells[self._num_cols - 1][self._num_rows - 1].has_bottom_wall = False
+        
+        # Redraw the entrance and exit
+        self._draw_cell(0, 0)
+        self._draw_cell(self._num_cols - 1, self._num_rows - 1)
