@@ -47,6 +47,13 @@ class Tests(unittest.TestCase):
                     self.m1._cells[i][j].visited,
                     f"Cell ({i}, {j}) should not be visited"
                 )
+                
+                
+    def test_maze_solve(self):
+        self.assertTrue(
+            self.m1.solve(),
+            "Maze should be solvable"
+        )
 
 
 if __name__ == "__main__":
